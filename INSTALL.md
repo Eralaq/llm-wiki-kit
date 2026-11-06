@@ -7,7 +7,7 @@ The kit is plain Python and Markdown. There is nothing to compile and no package
 | Need | For what | Notes |
 |---|---|---|
 | Python 3 | every tool and `install.py` | Standard library only. Tested on Python 3.12; older 3.x versions are likely fine but untested. |
-| git | getting the kit | A ZIP download works too (step 2). |
+| git | getting the kit | The web page and ZIP downloads of this server need an account (see step 2); `git clone` works without one. |
 | [Claude Code](https://claude.com/claude-code) CLI (`claude`) | only `run_bench.py`, `gen_aliases.py`, `run_improver.sh` | These call `claude -p` and spend your subscription, about $0.01 per question per run with a small model. `wiki_miner`, `wiki_search`, `eval_search`, `mine_sessions` and `install.py` need no model and no network. |
 
 ## 2. Get the kit
@@ -17,7 +17,7 @@ git clone https://git.ctll.ru/Babylen/llm-wiki-kit.git
 cd llm-wiki-kit
 ```
 
-Without git: download `https://git.ctll.ru/Babylen/llm-wiki-kit/archive/main.zip` and unpack it.
+`git clone` over HTTPS needs no account. The Forgejo web page, the API and ZIP archive links on this server ask for a sign-in (an anonymous request is redirected to the login page), so share the clone address, not a web link. Without git, sign in and use "Download ZIP" on the repository page.
 
 ## 3. Check it works here (no network, no model)
 
