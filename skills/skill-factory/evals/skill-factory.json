@@ -1,0 +1,42 @@
+[
+ {
+  "query": "сделай скилл из того, что ты постоянно перепечатываешь",
+  "should_trigger": true
+ },
+ {
+  "query": "find what I keep retyping in my past sessions and make a skill with scripts",
+  "should_trigger": true
+ },
+ {
+  "query": "запусти skill-factory на проекте MyProject",
+  "should_trigger": true
+ },
+ {
+  "query": "проанализируй прошлые сессии и найди повторяющиеся SQL-запросы",
+  "should_trigger": true
+ },
+ {
+  "query": "создай скилл и скрипты, чтобы бот не писал код подключения заново",
+  "should_trigger": true
+ },
+ {
+  "query": "напиши функцию на Python для сортировки списка",
+  "should_trigger": false
+ },
+ {
+  "query": "как установить готовый скилл из маркетплейса",
+  "should_trigger": false
+ },
+ {
+  "query": "объясни, как работают хуки в Claude Code",
+  "should_trigger": false
+ },
+ {
+  "query": "сделай деплой Tanuki",
+  "should_trigger": false
+ },
+ {
+  "query": "что такое context window в языковых моделях",
+  "should_trigger": false
+ }
+]

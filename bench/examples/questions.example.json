@@ -1,0 +1,4 @@
+[
+  {"id": 1, "question": "How do I rotate the database backup key?", "gold_pages": ["db-backup-runbook"], "note": "synthetic example"},
+  {"id": 2, "question": "why does the login page redirect twice", "gold_pages": ["auth-flow", "login-redirect-bug"], "note": "a hit = any listed page"}
+]

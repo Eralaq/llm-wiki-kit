@@ -1,0 +1,10 @@
+{
+  "coffee-brewing": {
+    "aliases": ["espresso", "flat white", "moka pot"],
+    "questions": ["how long should I brew a pour-over", "what grind size for a moka pot"]
+  },
+  "trip-planning": {
+    "aliases": ["itinerary", "travel plan", "route"],
+    "questions": ["which days are reserved for the trip", "where do we stay in the first week"]
+  }
+}
