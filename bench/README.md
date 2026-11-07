@@ -35,7 +35,7 @@ python tools/judge_answers.py --bench out/C1/bench.json --gold bench/questions.j
 ```
 
 - `eval_search`: hit@k, recall@k (share of ALL gold pages found) and junk@k (average non-gold pages in the top k) for k = 1, 3, 5.
-- `run_bench`: steps, steps to the first gold page, pages opened that were not gold (junk), tokens, cost. A page counts as opened through `Read` or `wiki_search.py --show <slug>`. With `--search` the agent may run only `wiki_search.py`, so it cannot read pages another way that the bench would miss.
+- `run_bench`: steps, steps to the first gold page, pages opened that were not gold (junk), tokens, cost. A page counts as opened through `Read`, `wiki_search.py --show <slug>`, or a shell command that prints it whole (`cat`, `head`, `tail`, `sed` on `wiki/<slug>.md`). Several pages in one command all count.
 - **Usage limit.** When the limit is reached `run_bench` stops, saves the finished questions and exits with code 3. Run the same command with `--resume` after the reset. Runs that failed for network reasons (HTTP 403 and similar) are retried once and, if they still fail, are listed with an `error` and left out of every figure.
 - `judge_answers`: per fact, is it in the answer (presence) and is it supported by the pages the agent read (grounding). Two separate model calls. It also writes `manual-sample.md`: ten random answers for a human to mark correct, partial or wrong. **Compare the judge with your marks before trusting its numbers.** `--offline` checks only facts that have an `any` list and spends nothing.
 
@@ -49,4 +49,6 @@ A variant with a search tool counts as better than the plain wiki only if, on th
 
 Cost guide (Haiku, our wiki): about $0.01 per question per run; the judge adds two small calls per answer.
 
-Sandbox: the agent runs with `--permission-mode dontAsk` and an allow-list (Read, Grep, Glob; with `--search` also `python tools/wiki_search.py`). It works in a frozen copy, but the copy is not an OS-level sandbox: read-only tools can still read paths outside it, so do not run the bench on a wiki folder that sits next to secrets you would not show the model.
+Tools and sandbox. The plain arm gets Read, Grep and Glob and no Bash. With `--search` the agent gets Bash, and the allow-list names only `python tools/wiki_search.py`, **but that does not stop `cat`, `grep` or `head`: in `dontAsk` mode read-only shell commands run anyway (we tested this on 2026-11-07).** So the two arms do not have the same tools unless you say so: add `--shell` to the plain arm to give it the same read-only Bash, and compare like with like. Our first A-versus-C numbers were made without this and carry that caveat.
+
+The agent works in a frozen copy, but the copy is not an OS-level sandbox: read-only tools can still read paths outside it, so do not run the bench on a wiki folder that sits next to secrets you would not show the model.

@@ -142,6 +142,16 @@ class Lint(unittest.TestCase):
         self.assertIn(("non-english", "ru"), kinds)
         self.assertNotIn(("broken-link", "a"), kinds)
 
+    def test_links_inside_code_are_examples_not_links(self):
+        from wiki_lint import lint
+        with tempfile.TemporaryDirectory() as d:
+            w = make_wiki(Path(d), {"a": {"r": "- [[a]] and `[[example-name]]`\n\n```\n[[fenced]]\n```"}})
+            self.assertEqual([i for i in lint(w) if i["kind"] == "broken-link"], [])
+
+    def test_fresh_template_install_lints_without_errors(self):
+        from wiki_lint import lint
+        self.assertEqual([i for i in lint(KIT / "template" / "wiki") if i["level"] == "error"], [])
+
     def test_clean_wiki_has_no_errors(self):
         from wiki_lint import lint
         with tempfile.TemporaryDirectory() as d:
@@ -190,6 +200,15 @@ class ParseStream(unittest.TestCase):
         self.assertEqual(r["steps_to_first_gold"], 2)
         self.assertEqual(r["junk_pages"], ["other"])  # index is not junk
         self.assertTrue(r["index_first"])
+
+    def test_several_pages_in_one_command_and_shell_reads(self):
+        from run_bench import parse_stream
+        cmd = "python tools/wiki_search.py --show first; echo ----; python tools/wiki_search.py --show gold-page 2>&1 | head -50"
+        out = stream(tool("Bash", command=cmd), tool("Bash", command="cat wiki/shell-read.md | head -20"),
+                     tool("Bash", command="grep -n x wiki/not-a-read.md"), result("done"))
+        r = parse_stream(out, "", ["gold-page"])
+        self.assertEqual(r["opened"], ["first", "gold-page", "shell-read"])
+        self.assertEqual(r["steps_to_first_gold"], 1)  # found in the first command although it is the second page there
 
     def test_usage_limit_is_an_error_not_a_miss(self):
         from run_bench import parse_stream

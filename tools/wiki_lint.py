@@ -37,7 +37,12 @@ DATE = re.compile(r"^\*\*Last updated\*\*:\s*(\S+)", re.M)
 SPECIAL = {"index", "log"}
 
 
+CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
+
+
 def targets(text: str) -> set[str]:
+    """Link targets outside code: `[[page-name]]` written as an example inside backticks is not a link."""
+    text = CODE.sub("", text)
     out = {x.strip() for x in WIKILINK.findall(text)}
     out |= {Path(x).name for x in MDLINK.findall(text) if "://" not in x}
     return out

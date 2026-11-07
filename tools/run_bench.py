@@ -63,7 +63,19 @@ def prepare_search(snap: Path, aliases: Path | None) -> None:
 
 LIMIT_RE = re.compile(r"hit your limit|usage limit|rate limit|5-hour limit|weekly limit|limit reached|resets? at", re.I)
 NETWORK_RE = re.compile(r"403|network not allowed|forbidden|ECONNRESET|timed? ?out|overloaded|529|502|503", re.I)
-SHOW_RE = re.compile(r"wiki_search\.py\s+--show\s+['\"]?([A-Za-z0-9_.\-]+)")
+SHOW_RE = re.compile(r"wiki_search\.py\s+(?:-\w+\s+)*--show\s+['\"]?([A-Za-z0-9_.\-]+)")
+SHELL_READER = re.compile(r"^\s*(?:cat|head|tail|sed|awk|less|more|bat|nl|type)\b")
+WIKI_PATH = re.compile(r"wiki/([A-Za-z0-9_.\-]+?)\.md")
+
+
+def pages_opened_by_command(cmd: str) -> list[str]:
+    """Wiki pages a Bash command prints whole: `wiki_search.py --show X` and cat/head/tail/sed/... on a wiki/X.md path.
+    Read-only shell commands run even when the allow-list names only wiki_search (checked 2026-11-07), so they must count."""
+    out = [m.removesuffix(".md") for m in SHOW_RE.findall(cmd)]
+    for seg in re.split(r"[;&|\n]+", cmd):
+        if SHELL_READER.match(seg):
+            out += WIKI_PATH.findall(seg.replace("\\", "/"))
+    return out
 
 
 def parse_stream(out: str, stderr: str, gold: list[str]) -> dict:
@@ -81,13 +93,13 @@ def parse_stream(out: str, stderr: str, gold: list[str]) -> dict:
                 if b.get("type") == "tool_use":
                     inp = b.get("input") or {}
                     desc = inp.get("file_path") or inp.get("pattern") or inp.get("command") or inp.get("path") or ""
-                    steps.append({"tool": b.get("name"), "arg": str(desc).replace("\\", "/")[-90:]})
+                    step = {"tool": b.get("name"), "arg": str(desc).replace("\\", "/")[-90:], "opens": []}
                     if b.get("name") == "Read":
-                        opened.append(Path(str(inp.get("file_path", ""))).stem)
+                        step["opens"] = [Path(str(inp.get("file_path", ""))).stem]
                     elif b.get("name") == "Bash":
-                        m = SHOW_RE.search(str(inp.get("command", "")))
-                        if m:
-                            opened.append(m.group(1)[:-3] if m.group(1).endswith(".md") else m.group(1))
+                        step["opens"] = pages_opened_by_command(str(inp.get("command", "")))
+                    steps.append(step)
+                    opened += step["opens"]
                 elif b.get("type") == "text":
                     texts.append(b.get("text", ""))
         elif o.get("type") == "result":
@@ -103,22 +115,24 @@ def parse_stream(out: str, stderr: str, gold: list[str]) -> dict:
         error = "network" if (NETWORK_RE.search(stderr) or not out.strip()) else "empty"
     elif is_error and not steps:
         error = "network" if NETWORK_RE.search(blob) else "empty"
-    first = next((i + 1 for i, s in enumerate(steps) if (s["tool"] == "Read" and Path(s["arg"]).stem in gold)
-                  or (s["tool"] == "Bash" and (m := SHOW_RE.search(s["arg"])) and m.group(1).removesuffix(".md") in gold)), None)
+    first = next((i + 1 for i, st in enumerate(steps) if any(x in gold for x in st["opens"])), None)
     uniq = list(dict.fromkeys(opened))
     return {"steps": len(steps), "steps_to_first_gold": first,
             "any_gold": any(g in opened for g in gold), "all_gold": all(g in opened for g in gold),
             "junk_pages": [x for x in uniq if x not in gold and x not in ("index", "log", "CLAUDE")],
-            "used_search": any(s["tool"] == "Bash" and "wiki_search" in s["arg"] for s in steps),
+            "used_search": any(st["tool"] == "Bash" and "wiki_search" in st["arg"] for st in steps),
             "index_first": bool(steps) and steps[0]["tool"] == "Read" and Path(steps[0]["arg"]).stem == "index",
             "opened": opened, "trace": steps, "error": error,
             "tokens_in": (usage.get("input_tokens") or 0) + (usage.get("cache_read_input_tokens") or 0) + (usage.get("cache_creation_input_tokens") or 0),
             "tokens_out": usage.get("output_tokens"), "cost_usd": cost, "answer": final[:1500]}
 
 
-def run_one(q: dict, snap: Path, model: str, max_turns: int, timeout: int, search: bool = False) -> dict:
+def run_one(q: dict, snap: Path, model: str, max_turns: int, timeout: int, search: bool = False, shell: bool = False) -> dict:
+    """Bash is off in the plain arm. With --search or --shell it is on, and then read-only commands (cat, grep, head) run
+    whatever the allow-list says: dontAsk allows them, so the allow-list is not a sandbox. Both arms should get the same
+    tools when you compare them: use --shell on the plain arm if the other arm has --search."""
     allowed = "Read,Grep,Glob" + (",Bash(python tools/wiki_search.py:*)" if search else "")
-    denied = ("" if search else "Bash,") + "Edit,Write,NotebookEdit,WebFetch,WebSearch,Agent"
+    denied = ("" if (search or shell) else "Bash,") + "Edit,Write,NotebookEdit,WebFetch,WebSearch,Agent"
     cmd = ["claude", "-p", PROMPT.format(q=q["question"]), "--model", model, "--output-format", "stream-json", "--verbose",
            "--allowedTools", allowed, "--disallowedTools", denied,
            "--max-turns", str(max_turns), "--no-session-persistence", "--permission-mode", "dontAsk"]
@@ -133,12 +147,12 @@ def run_one(q: dict, snap: Path, model: str, max_turns: int, timeout: int, searc
     return res
 
 
-def run_with_retry(q: dict, snap: Path, model: str, max_turns: int, timeout: int, search: bool, wait: int = 30) -> dict:
+def run_with_retry(q: dict, snap: Path, model: str, max_turns: int, timeout: int, search: bool, wait: int = 30, shell: bool = False) -> dict:
     """One retry for a network-type failure (HTTP 403 and similar happen and pass). A usage limit is never retried."""
-    r = run_one(q, snap, model, max_turns, timeout, search)
+    r = run_one(q, snap, model, max_turns, timeout, search, shell)
     if r["error"] == "network":
         time.sleep(wait)
-        r = run_one(q, snap, model, max_turns, timeout, search)
+        r = run_one(q, snap, model, max_turns, timeout, search, shell)
     return r
 
 
@@ -177,6 +191,7 @@ def main() -> int:
     ap.add_argument("--reuse-snapshot", action="store_true")
     ap.add_argument("--resume", action="store_true", help="keep the valid results already in --out/bench.json and run only the rest")
     ap.add_argument("--search", action="store_true", help="give the agent `python tools/wiki_search.py` (the only Bash command allowed); the snapshot gets the tool, the alias file and a short note in its CLAUDE.md")
+    ap.add_argument("--shell", action="store_true", help="allow Bash in the plain arm too, so it has the same tools as a --search arm (read-only shell commands only)")
     ap.add_argument("--aliases", type=Path, help="aliases.json for --search (kept outside wiki/)")
     a = ap.parse_args()
     a.out.mkdir(parents=True, exist_ok=True)
@@ -196,7 +211,7 @@ def main() -> int:
     for i in ids:
         if i in done:
             continue
-        r = run_with_retry(qs[i], a.snapshot, a.model, a.max_turns, a.timeout, a.search)
+        r = run_with_retry(qs[i], a.snapshot, a.model, a.max_turns, a.timeout, a.search, shell=a.shell)
         res.append(r)
         print(f"#{i}: steps={r['steps']} to_gold={r['steps_to_first_gold']} all_gold={r['all_gold']} cost={r['cost_usd']} {r['seconds']}s error={r['error']}", flush=True)
         bench.write_text(json.dumps({"model": a.model, "pages": n, "results": res}, ensure_ascii=False, indent=1), encoding="utf-8")
