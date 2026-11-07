@@ -148,6 +148,11 @@ class Lint(unittest.TestCase):
             w = make_wiki(Path(d), {"a": {"r": "- [[a]] and `[[example-name]]`\n\n```\n[[fenced]]\n```"}})
             self.assertEqual([i for i in lint(w) if i["kind"] == "broken-link"], [])
 
+    def test_escaped_pipe_and_outside_paths_are_not_broken_links(self):
+        from wiki_lint import targets
+        self.assertEqual(targets("| fork of [[herdr-overview\\|Herdr]] |"), {"herdr-overview"})
+        self.assertEqual(targets("[doc](../../sources/x/design.md) and [[../sources/zellij]] and [here](other.md)"), {"other"})
+
     def test_fresh_template_install_lints_without_errors(self):
         from wiki_lint import lint
         self.assertEqual([i for i in lint(KIT / "template" / "wiki") if i["level"] == "error"], [])

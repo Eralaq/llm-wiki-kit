@@ -43,9 +43,11 @@ CODE = re.compile(r"```.*?```|`[^`\n]*`", re.S)
 def targets(text: str) -> set[str]:
     """Link targets outside code: `[[page-name]]` written as an example inside backticks is not a link."""
     text = CODE.sub("", text)
-    out = {x.strip() for x in WIKILINK.findall(text)}
-    out |= {Path(x).name for x in MDLINK.findall(text) if "://" not in x}
-    return out
+    # `[[page\|label]]` in a Markdown table escapes the pipe: drop that backslash. A target with a folder part
+    # ("../sources/x", "legal/x") points outside the flat wiki folder, so it is not checked here.
+    out = {x.strip().rstrip("\\").strip() for x in WIKILINK.findall(text)}
+    out |= {Path(x).name for x in MDLINK.findall(text) if "://" not in x and "/" not in x}
+    return {x for x in out if x and "/" not in x}
 
 
 def lint(wiki: Path, stale_days: int | None = None, english_only: bool = False, min_chars: int = 200, today: datetime.date | None = None) -> list[dict]:
