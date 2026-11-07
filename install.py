@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import difflib
-import shutil
 import sys
 from pathlib import Path
 
@@ -60,6 +59,9 @@ def plan(a) -> list[tuple[str, Path, str | bytes | None, str]]:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):  # a cp1251/cp866 console must not crash on a path or a line of the user's CLAUDE.md
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")  # keep the console encoding, show ? instead of crashing
     ap = argparse.ArgumentParser()
     ap.add_argument("--target", type=Path, required=True)
     ap.add_argument("--project", default="this project")

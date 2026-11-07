@@ -5,7 +5,12 @@ For every past question (user prompt) that led the agent to read wiki pages, wor
 pages. A word becomes a page alias when it is rare overall and shows up in >= --min-episodes questions that read
 that page. The bench questions are excluded. Output is a DRAFT for the owner to review: reads are noisy labels.
 """
-import argparse, collections, json, math, re, sys
+import argparse
+import collections
+import json
+import math
+import re
+import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 from wiki_miner import Wiki, mine

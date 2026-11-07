@@ -6,7 +6,10 @@
 Shows what will be appended and asks for confirmation (unless --yes). The backup is <target>.bak-YYYY-MM-DD.
 Nothing is changed if the exact text is already present.
 """
-import argparse, datetime, shutil, sys
+import argparse
+import datetime
+import shutil
+import sys
 from pathlib import Path
 
 ap = argparse.ArgumentParser()

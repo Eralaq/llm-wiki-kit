@@ -270,14 +270,17 @@ def main() -> int:
     dn = collections.Counter()
     for s in sessions:
         for k, n in s["denied_cmds"].items():
-            dc[k].add(s["id"][:8]); dn[k] += n
+            dc[k].add(s["id"][:8])
+            dn[k] += n
         for k, n in s["retry_cmds"].items():
             rc[k] += n
     sk_s, sk_n, sk_ex = collections.defaultdict(set), collections.Counter(), {}
     for s in sessions:
         for k, n in s["skel"].items():
             if n >= 3:
-                sk_s[k].add(s["id"][:8]); sk_n[k] += n; sk_ex.setdefault(k, s["skel_sample"].get(k, ""))
+                sk_s[k].add(s["id"][:8])
+                sk_n[k] += n
+                sk_ex.setdefault(k, s["skel_sample"].get(k, ""))
     cand = sorted(((k, len(v)) for k, v in sk_s.items() if len(v) >= a.min_sessions), key=lambda r: (-r[1], -sk_n[r[0]]))
     L += ["", "## Skill candidates: command shapes typed 3+ times in a session, in 3+ sessions", "",
           "Shape = quoted text, numbers and paths collapsed. Deep dive for one candidate: skill-factory `mine_sessions.py <project fragment>`.", ""]

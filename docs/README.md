@@ -8,7 +8,8 @@ Honesty note: everything here comes from our own wiki pages and measurements (da
 | [our-findings.md](our-findings.md) | What we measured on a 559-page wiki: miner, baseline, search tool with generated aliases, failure causes, limits. |
 | [differences-from-karpathy.md](differences-from-karpathy.md) | Table: what the pattern gives versus what we added. |
 | [imported-ideas.md](imported-ideas.md) | What we took, plan to take, or rejected from five outside sources, and how much of each we actually read. |
-| [roadmap.md](roadmap.md) | Ordered next steps with reasons. Nothing is started. |
+| [related-work.md](related-work.md) | How other projects implement the pattern and how they evaluate retrieval; what we took and what we did not. |
+| [roadmap.md](roadmap.md) | Ordered next steps with reasons. |
 | [glossary.md](glossary.md) | Gold page, frozen copy, baseline, alias file, evidence rule, hit versus correctness. |
 
 Suggested order: karpathy-pattern, our-findings, differences-from-karpathy, then the rest.

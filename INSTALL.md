@@ -24,10 +24,10 @@ Mirror: `https://git.ctll.ru/Babylen/llm-wiki-kit.git` (`git clone` works withou
 ## 3. Check it works here (no network, no model)
 
 ```
-python -I -m unittest discover -s tests -v
+python -X utf8 -I -m unittest discover -s tests -v
 ```
 
-Five tests should pass. On Windows, run commands with the environment variable `PYTHONUTF8=1` (PowerShell: `$env:PYTHONUTF8=1`), otherwise Cyrillic output can fail on a legacy console encoding.
+All tests should pass (22 at the time of writing; the ruff test is skipped when `ruff` is not installed). Use `-X utf8`, not the `PYTHONUTF8` variable: `-I` ignores every `PYTHON*` environment variable. The tools themselves no longer crash on a legacy console encoding such as cp1251 (`install.py` prints `?` for characters the console cannot show; the other tools write UTF-8), and a test covers it.
 
 ## 4. Put it into a project
 
@@ -50,7 +50,7 @@ What you get in the project:
 | `CLAUDE.md` | The wiki constitution with your project name filled in. If the project already has a `CLAUDE.md`, yours is left untouched, the template is written to `CLAUDE.template.md`, and a diff is printed. |
 | `wiki/index.md`, `wiki/log.md`, `wiki/_page-template.md` | Skeleton files. Existing files are skipped. |
 | `aliases.example.json` | Format of the alias file (copy it to `aliases.json`, keep it outside `wiki/`). |
-| `tools/` | With `--tools`: the measurement and search scripts. |
+| `tools/` | With `--tools`: the measurement, search, lint and judge scripts. |
 | `.claude/skills/` | With `--skills project`: `wiki-peek`, `code-peek`, `source-code-context`. Use `--skills global` to put them in `~/.claude/skills/` for all projects. |
 
 `install.py` never overwrites a file and asks for confirmation (use `--yes` to skip). To undo, delete the files it listed.
@@ -90,4 +90,4 @@ Run each variant three times and change one thing at a time. The result files ar
 
 ## Status
 
-v0.1. It grew out of one project's wiki (559 pages) and has not yet been run on another one: that first outside run is the real test of this kit. Please report what breaks.
+v0.2. It grew out of one project's wiki (559 pages). The first outside run by another agent found real defects (silent zeros at a usage limit, hits counted only for `Read`, a crash on a cp1251 console); v0.2 fixes them and adds `wiki_lint`, `judge_answers`, split question sets and alias hashes. None of the search-quality claims is proven yet: see `docs/related-work.md` for how others measure and `docs/roadmap.md` for what is still open.

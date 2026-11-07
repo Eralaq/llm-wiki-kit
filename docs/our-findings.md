@@ -60,3 +60,12 @@ In our A-versus-C runs Bash was not strictly confined to the search tool: some C
 - A better first line per page (summary and aliases) is probably worth more than a smaller `index.md`.
 - Agents search rather than browse in general. We saw it in one wiki and one model only.
 - A search tool that returns a clearly ranked top hit with a confidence signal might fix the "trust the top hit" problem. Untested.
+
+## 6. Additions of 2026-11-07 (offline, free; nine questions again, so read as direction)
+
+**Stemmer and hub boost** (`eval_search.py`, generated aliases, top-3 hit share): the old 5-letter prefix 0.44; suffix-stripping stemmer 0.22; without aliases prefix 0.11, suffix 0.22. With one question worth 0.11 the stemmer difference is two questions either way, so neither is shown better; the prefix stays the default because it is the variant the agent runs were made with. Hub boost (more weight to pages many others link to): no change at 0.1 and 0.15, worse at 0.3 (top-3 hit 0.33). It stays off. Offline top-5 hit with aliases was 0.44 here, below what the agent reached by trying several searches, so the offline figure is a floor for the search tool, not for the agent.
+
+**Lint of the live wiki** (`wiki_lint.py` on the 559 pages): 50 errors and 67 warnings (with the English-only check off). Errors: 49 links to pages that do not exist (for example a page named `frontend` linked from several pages, and legal pages that were never created) and one page without a **Sources** line. Warnings: 52 pages that no other page links to, 15 without a "Related pages" section. Every page is listed in `index.md`. These were found by tool and not yet fixed; nobody has decided whether the missing pages should be created or the links removed. The English-only check reports 92 pages with Cyrillic text, which may be quoted owner wording or a real rule violation; not looked into.
+
+**Measuring-tool defects found by another agent's run on its own wiki and fixed in v0.2** (the first outside use): a usage limit made the bench record questions as zero-step misses; hits were counted only for the `Read` tool, so reading through `cat` showed as a miss; `install.py` crashed on a cp1251 console when printing the diff against an existing `CLAUDE.md` that contained characters outside that code page (we reproduced it with `→`). The advice in `INSTALL.md` to set `PYTHONUTF8` was wrong with `-I`, which ignores that variable.
+

@@ -1,11 +1,11 @@
 # Roadmap: ordered next steps for the kit, each with the reason it comes where it does.
 
-Status of every item: not started. The order matters: measurement first, changes to a live wiki last.
+Status updated 2026-11-07. The order matters: measurement first, changes to a live wiki last. Tools for items 1, 2, 3 and 8 now exist; nothing has been RUN on an owner-written question set yet, because that set does not exist and the model runs wait for the usage limit to reset.
 
 ## Now: make the measurement trustworthy
 
-1. **Measure answer correctness, not only hits.** Reason: a hit means a gold page was opened, not that the answer was right. Until this exists, "faster and cheaper" cannot be called better. Not started.
-2. **Grow the question set to 25 to 30 and repeat each question.** Reason: nine questions, one model, three runs is a direction only. Also write gold pages independently of what the agent opened, to remove the selection bias noted in [our-findings.md](our-findings.md). Not started.
+1. **Measure answer correctness, not only hits.** Reason: a hit means a gold page was opened, not that the answer was right. Until this exists, "faster and cheaper" cannot be called better. Tool built (`judge_answers.py`, fact checklist, two judges, human sample); not yet run on real data.
+2. **Grow the question set to 25 to 30 and repeat each question.** Reason: nine questions, one model, three runs is a direction only. Also write gold pages independently of what the agent opened, to remove the selection bias noted in [our-findings.md](our-findings.md). Question files now carry `split` (tune or holdout) and `facts`; the holdout set, written by the owner before seeing the wiki, still has to be written. See `bench/README.md`.
 3. **Fix the answer checker's inputs.** Keep question context (what the owner knew) and freeze the wiki at question time where possible, since some gold pages changed during their own tasks. Not started.
 
 ## Then: tune the search tool
@@ -23,7 +23,7 @@ Status of every item: not started. The order matters: measurement first, changes
 
 ## Later
 
-8. **Wiki linter** (orphans, missing summary lines, duplicate or overlapping pages, broken links), possibly with a single health number. Not started.
+8. **Wiki linter**: `wiki_lint.py` covers broken links, missing fields, orphans, index mismatches, stale and duplicate pages. Not covered: overlapping pages and contradictions (need a model), a single health number. First run on our wiki: see [our-findings.md](our-findings.md) section 6.
 9. **Post-session mode of the miner**: take single-session signals right after a session and feed them into the 3-session rule. Not started.
 10. **Hub or entry pages** for topics where many pages overlap (the updates topic needed four of five pages). Not started.
 11. **Staleness markers** on pages (fresh, stale, unverified) and a check against source changes. Not started.

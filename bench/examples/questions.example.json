@@ -1,4 +1,37 @@
 [
-  {"id": 1, "question": "How do I rotate the database backup key?", "gold_pages": ["db-backup-runbook"], "note": "synthetic example"},
-  {"id": 2, "question": "why does the login page redirect twice", "gold_pages": ["auth-flow", "login-redirect-bug"], "note": "a hit = any listed page"}
+  {
+    "id": 1,
+    "question": "How do I rotate the database backup key?",
+    "gold_pages": [
+      "db-backup-runbook"
+    ],
+    "split": "tune",
+    "author": "agent",
+    "facts": [
+      "The key is rotated with the rotate-key script, not by hand",
+      {
+        "text": "The old key stays valid for 7 days",
+        "any": [
+          "7 days",
+          "seven days"
+        ]
+      }
+    ],
+    "note": "synthetic example"
+  },
+  {
+    "id": 2,
+    "question": "why does the login page redirect twice",
+    "gold_pages": [
+      "auth-flow",
+      "login-redirect-bug"
+    ],
+    "split": "holdout",
+    "author": "owner",
+    "facts": [
+      "The first redirect comes from the session check",
+      "A second redirect is added by the locale middleware"
+    ],
+    "note": "a hit = any listed page"
+  }
 ]

@@ -193,7 +193,8 @@ def main() -> int:
             if len(ops) >= 8:
                 hard.append((len(ops), sid, ep["q"]))
 
-    ge = lambda d: sorted(((k, len(v)) for k, v in d.items() if len(v) >= a.min_sessions), key=lambda r: -r[1])
+    def ge(d):
+        return sorted(((k, len(v)) for k, v in d.items() if len(v) >= a.min_sessions), key=lambda r: -r[1])
     readcount = collections.Counter({k: sum(c.values()) for k, c in reads_by_sess.items()})
     big = sorted(wiki.size.values())[len(wiki.size) * 9 // 10] if wiki.size else 0
     never = sorted(n for n in wiki.pages if n not in readcount and n not in ("index", "log"))
